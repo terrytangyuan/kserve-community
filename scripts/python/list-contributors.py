@@ -84,7 +84,7 @@ repo = opts.repo
 GITHUB_API_TOKEN = env["GITHUB_API_TOKEN"]  # Did you export your GitHub API token?
 
 # query template needs to be completed with repo, date, results per page, etc
-query_template = """
+pr_query_template = """
 {
   query: search(
     type: ISSUE
@@ -129,11 +129,49 @@ query_template = """
 }
 """
 
+issue_query_template = """
+{
+  query: search(
+    type: ISSUE
+    query: "repo:%s is:issue comments:>1 created:>%s"
+    first: %d
+    # after: "$cursor"
+    %s
+  )
+  {
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+    nodes {
+      ... on Issue {
+        number
+        title
+        createdAt
+        author {
+          login
+        }
+        comments(last: 100) {
+          nodes {
+            author {
+              login
+            }
+            # bodyText
+          }
+        }
+      }
+    }
+  }
+}
+"""
+
+
 
 def get_query_text(repository: str = repo,
                    since: date = since_date,
                    num_results: int = 100,
-                   cursor: str = None) -> str:
+                   cursor: str = None,
+                   query_template: str = None) -> str:
 
     query_txt = query_template % (
         repository,
@@ -169,13 +207,13 @@ def run_query(query: str) -> str:
     return resp_content
 
 
-def get_paged_query_results() -> []:
+def get_paged_query_results(template: str) -> []:
     has_next_page = True
     cursor = None
     nodes = []
 
     while has_next_page:
-        query_text = get_query_text(cursor=cursor)
+        query_text = get_query_text(cursor=cursor, query_template=template)
         query_json = {'query': query_text}
         query_json_str = json.dumps(query_json)
         result_str = run_query(query_json_str)
@@ -192,8 +230,8 @@ def get_paged_query_results() -> []:
     return nodes
 
 
-def get_contributors() -> Dict[str, List]:
-    nodes = get_paged_query_results()
+def get_pr_contributors() -> Dict[str, List]:
+    nodes = get_paged_query_results(pr_query_template)
     participants_to_pr_by_role = defaultdict(lambda: defaultdict(list))
     contributors_to_pr = dict()
 
@@ -213,6 +251,39 @@ def get_contributors() -> Dict[str, List]:
 
     if debug:
         print("=================== all PR participants ===================")
+        print(json.dumps(participants_to_pr_by_role, indent=2, sort_keys=True)
+              .replace("\n      ", "")
+              .replace("\n    ]", "]"))
+        print("===========================================================\n\n")
+
+    for login in participants_to_pr_by_role:
+        prs_participated = set()
+
+        for role in roles:
+            prs_participated.update(participants_to_pr_by_role[login][role])
+
+        if login not in ignored_users:
+            contributors_to_pr[login] = sorted(prs_participated, reverse=True)
+
+    return contributors_to_pr
+
+def get_issue_contributors() -> Dict[str, List]:
+    nodes = get_paged_query_results(issue_query_template)
+    participants_to_pr_by_role = defaultdict(lambda: defaultdict(list))
+    contributors_to_pr = dict()
+
+    for node in nodes:
+        pr_num = node["number"]
+        author = node["author"]["login"]
+        commenters = {r["author"]["login"] for r in node["comments"]["nodes"]} - {author}
+
+        participants_to_pr_by_role[author][Role.AUTHOR].append(pr_num)
+
+        for login in commenters:
+            participants_to_pr_by_role[login][Role.COMMENTER].append(pr_num)
+
+    if debug:
+        print("=================== all issue participants ===================")
         print(json.dumps(participants_to_pr_by_role, indent=2, sort_keys=True)
               .replace("\n      ", "")
               .replace("\n    ]", "]"))
@@ -252,7 +323,7 @@ def force_ipv4():
 
 if __name__ == '__main__':
     force_ipv4()
-    contributors = get_contributors()
+    contributors = get_pr_contributors()
 
     print(f"Contributors to '{repo}'"
           f" (PR {', '.join([r.value+'s' for r in roles])})"
@@ -268,3 +339,20 @@ if __name__ == '__main__':
 
         if num_prs >= min_prs_participated:
             print("%3d  %-18s %s" % (num_prs, login, prs_txt))
+
+    contributors = get_issue_contributors()
+
+    print(f"\n\nContributors to '{repo}'"
+          f" (issue participants)"
+          f" by number of issues (>{min_prs_participated}) participated"
+          f" since {since_date.strftime('%Y-%m-%d')}:\n")
+
+    for login, issues in sorted(contributors.items(),
+                             key=lambda item: len(item[1]),
+                             reverse=True):
+        num_issues = len(issues)
+        issues_str = str(issues)
+        issues_txt = (issues_str[:60] + ' ... ]') if len(issues_str) > 60 else issues_str
+
+        if num_issues >= min_prs_participated:
+            print("%3d  %-18s %s" % (num_issues, login, issues_txt))

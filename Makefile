@@ -17,7 +17,7 @@ list-pr-reviewers:
 .PHONY: list-pr-authors
 ## List top PR authors
 list-pr-authors:
-	@python3 scripts/python/list-contributors.py -r author -n 3
+	@python3 scripts/python/list-contributors.py -r author -n 1
 
 .DEFAULT_GOAL := help
 .PHONY: help
