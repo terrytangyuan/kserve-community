@@ -324,35 +324,37 @@ def force_ipv4():
 if __name__ == '__main__':
     force_ipv4()
     contributors = get_pr_contributors()
+    # https://github.com/opendatahub-io/org-management/blob/main/config/opendatahub-io/org.yaml#L285
+    known_ids = ['danielezonca','heyselbi','Jooho','taneem-ibrahim','Xaenalt','davidesalerno','dtrifiro','israel-hdez','rpancham','spolti','terrytangyuan','vaibhavjainwiz','VedantMahabaleshwarkar','z103cb']
 
-    print(f"Contributors to '{repo}'"
-          f" (PR {', '.join([r.value+'s' for r in roles])})"
-          f" by number of PRs (>{min_prs_participated})"
+    print(f"PR {'/'.join([r.value+'s' for r in roles])} to '{repo}'"
+          f" by number of PRs"
           f" since {since_date.strftime('%Y-%m-%d')}:\n")
 
     for login, prs in sorted(contributors.items(),
                              key=lambda item: len(item[1]),
                              reverse=True):
-        num_prs = len(prs)
-        prs_str = str(prs)
-        prs_txt = (prs_str[:60] + ' ... ]') if len(prs_str) > 60 else prs_str
+        if login in known_ids:
+            num_prs = len(prs)
+            prs_str = str(prs)
+            # prs_txt = (prs_str[:60] + ' ... ]') if len(prs_str) > 60 else prs_str
 
-        if num_prs >= min_prs_participated:
-            print("%3d  %-18s %s" % (num_prs, login, prs_txt))
+            if num_prs >= min_prs_participated:
+                print("%3d  %-18s" % (num_prs, login))
 
-    contributors = get_issue_contributors()
+    # contributors = get_issue_contributors()
 
-    print(f"\n\nContributors to '{repo}'"
-          f" (issue participants)"
-          f" by number of issues (>{min_prs_participated}) participated"
-          f" since {since_date.strftime('%Y-%m-%d')}:\n")
+    # print(f"\n\nContributors to '{repo}'"
+    #       f" (issue participants)"
+    #       f" by number of issues (>{min_prs_participated}) participated"
+    #       f" since {since_date.strftime('%Y-%m-%d')}:\n")
 
-    for login, issues in sorted(contributors.items(),
-                             key=lambda item: len(item[1]),
-                             reverse=True):
-        num_issues = len(issues)
-        issues_str = str(issues)
-        issues_txt = (issues_str[:60] + ' ... ]') if len(issues_str) > 60 else issues_str
+    # for login, issues in sorted(contributors.items(),
+    #                          key=lambda item: len(item[1]),
+    #                          reverse=True):
+    #     num_issues = len(issues)
+    #     issues_str = str(issues)
+    #     issues_txt = (issues_str[:60] + ' ... ]') if len(issues_str) > 60 else issues_str
 
-        if num_issues >= min_prs_participated:
-            print("%3d  %-18s %s" % (num_issues, login, issues_txt))
+    #     if num_issues >= min_prs_participated:
+    #         print("%3d  %-18s %s" % (num_issues, login, issues_txt))
