@@ -342,6 +342,8 @@ if __name__ == '__main__':
             if num_prs >= min_prs_participated:
                 print("%3d  %-18s" % (num_prs, login))
 
+    print("\n")
+
     # contributors = get_issue_contributors()
 
     # print(f"\n\nContributors to '{repo}'"

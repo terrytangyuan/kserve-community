@@ -9,19 +9,13 @@ check-doc-links:
 list-contributors:
 	@python3 scripts/python/list-contributors.py
 
-.PHONY: list-pr-reviewers
-## List top PR reviewers
-list-pr-reviewers:
-	@python3 scripts/python/list-contributors.py -r reviewer commenter -n 1 -d 365
-
-.PHONY: list-pr-authors
-## List top PR authors
-list-pr-authors:
-	@python3 scripts/python/list-contributors.py -r author -n 1 -d 365
+.SILENT: summary
 
 summary:
-	make list-pr-authors
-	make list-pr-reviewers
+	@python3 scripts/python/list-contributors.py -r author -n 1 -d 365 --repo kserve/kserve
+	@python3 scripts/python/list-contributors.py -r reviewer commenter -n 1 -d 365 --repo kserve/kserve
+	@python3 scripts/python/list-contributors.py -r author -n 1 -d 365 --repo kserve/modelmesh-serving
+	@python3 scripts/python/list-contributors.py -r reviewer commenter -n 1 -d 365 --repo kserve/modelmesh-serving
 
 .DEFAULT_GOAL := help
 .PHONY: help
