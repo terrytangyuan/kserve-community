@@ -13,9 +13,13 @@ list-contributors:
 
 summary:
 	@python3 scripts/python/list-contributors.py -r author -n 1 -d 365 --repo kserve/kserve
-	@python3 scripts/python/list-contributors.py -r reviewer commenter -n 1 -d 365 --repo kserve/kserve
 	@python3 scripts/python/list-contributors.py -r author -n 1 -d 365 --repo kserve/modelmesh-serving
-	@python3 scripts/python/list-contributors.py -r reviewer commenter -n 1 -d 365 --repo kserve/modelmesh-serving
+	@python3 scripts/python/list-contributors.py -r author -n 1 -d 365 --repo kserve/modelmesh-runtime-adapter
+	@python3 scripts/python/list-contributors.py -r author -n 1 -d 365 --repo kserve/modelmesh
+	@python3 scripts/python/list-contributors.py -r author -n 1 -d 365 --repo kserve/rest-proxy
+
+# 	@python3 scripts/python/list-contributors.py -r reviewer commenter -n 1 -d 365 --repo kserve/kserve
+# 	@python3 scripts/python/list-contributors.py -r reviewer commenter -n 1 -d 365 --repo kserve/modelmesh-serving
 
 .DEFAULT_GOAL := help
 .PHONY: help

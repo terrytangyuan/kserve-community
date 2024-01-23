@@ -341,6 +341,9 @@ if __name__ == '__main__':
 
             if num_prs >= min_prs_participated:
                 print("%3d  %-18s" % (num_prs, login))
+                print(prs)
+                # Uncomment to print exact links
+                # print(["https://github.com/%s/pull/%s" % (repo, pr) for pr in prs])
 
     print("\n")
 
